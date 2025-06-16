@@ -1,6 +1,83 @@
-# SupplyChainDB
-SupplyChainDB project analyzes supply chain data to improve planning, shipment tracking, and logistics. Importing CSV data, designing a star schema with fact and dimension tables, cleaning and transforming data, and loading into MySQL. Advanced SQL stored procedures, CTEs, subqueries, and window functions, optimization enhances performance and insights.
+# Capstone Project: Supply Chain Data Analysis
 
+🔍 Overview
+The SupplyChain project  analyses supply chain data to uncover insights into supply planning, shipment trends, and logistical performance. It encompasses full-cycle data engineering steps, from ingestion to optimisation, utilising MySQL. 
+________________________________________
+## Project Workflow
+1. Data Ingestion
+•	Source: Provided CSV files
+•	Tools: MySQL Workbench, Medallion Architecture (Bronze → Silver → Gold)
+•	Task: Load raw CSVs into BRONZE schema staging tables.
+
+2. Data Cleaning & Transformation
+•	Handle missing values (e.g., impute weight using average values).
+•	Standardise and enrich location data.
+•	Convert date/time formats.
+•	Resolve data inconsistencies.
+•	Create DimDate from relevant timestamps.
+3. Data Modelling (Star Schema)
+•	Fact Tables:
+o	ShipmentFacts
+o	SupplyPlanFacts
+•	Dimension Tables:
+o	DimProduct
+o	DimLocation
+o	DimOrganization
+o	DimDate
+•	Design Tasks:
+o	Create ER diagram
+o	Normalise data
+o	Build SILVER schema with surrogate keys
+
+4. Load Data into Star Schema
+•	Populate GOLD tables from SILVER layer using SQL transformation scripts.
+
+5. Advanced SQL Queries
+•	Stored Procedure: Total planned quantity per location over the date range.
+•	CTE: Top 5 vendors by shipment count in a region.
+•	Subquery: Shipments with above-average weight.
+•	Window Function: Rolling avg. shipment weight by carrier.
+
+6. MySQL Optimisation
+•	Add indexes on keys and frequently queried fields.
+•	Consider partitioning ShipmentFacts by date for large volumes.
+•	Use EXPLAIN to troubleshoot and optimise slow queries.
+________________________________________
+##  Key Design Decisions
+🔸 Why This Schema?
+The star schema improves query performance and simplifies reporting by separating facts (measurable events) from dimensions (contextual data).
+🔸 Handling Slowly Changing Dimensions
+Use Type 2 SCD for tracking historical changes (e.g., carrier renames), preserving records with effective dates.
+🔸 SQL Techniques for Missing Data
+•	COALESCE to handle NULLs
+•	Derived values via averages or lookups from similar entries
+🔸 Data Consistency Strategy
+•	Use JOINs to cross-verify records
+•	Standardise identifiers and formats
+•	Deduplicate where necessary
+________________________________________
+💡 Interview-Style Q&A
+Q: What's the difference between a CTE and a subquery?
+A: CTEs improve readability and reusability; subqueries are nested within a main query. Use CTEs when logic must be reused or layered.
+Q: How do window functions enhance performance?
+A: They avoid unnecessary GROUP BY operations and let you calculate aggregates without collapsing rows.
+Q: Benefits of Table Partitioning?
+A: Speeds up queries on date ranges and large datasets by scanning only relevant partitions.
+Q: Troubleshooting slow queries?
+A: Use EXPLAIN, check index usage, avoid SELECT *, and monitor for expensive joins or subqueries.
+________________________________________
+To do… Repository Structure
+graphql
+CopyEdit
+📁 SupplyChain-Capstone
+├── 📂 data            # Raw CSVs
+├── 📂 sql_scripts     # All DDL/DML scripts
+├── 📂 diagrams        # ERD and schema visualisations
+├── 📂 reports         # Query results & insights
+└── 📄 README.md       # Project summary and key insights
+
+
+## further questions:
 ## Questions for this Capstone Project
 
 ### Why did you choose a particular schema for this project? Explain your rationale for selecting the fact and dimension tables.
