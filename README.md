@@ -1,7 +1,7 @@
 # SupplyChainDB
 SupplyChainDB project analyzes supply chain data to improve planning, shipment tracking, and logistics. Importing CSV data, designing a star schema with fact and dimension tables, cleaning and transforming data, and loading into MySQL. Advanced SQL stored procedures, CTEs, subqueries, and window functions, optimization enhances performance and insights.
 
-## Questions for the Capstone Project (Add as README on your Github)
+## Questions for this Capstone Project
 
 ### Why did you choose a particular schema for this project? Explain your rationale for selecting the fact and dimension tables.
 The star schema was chosen for this project because it provides a clear and efficient structure for analytical queries in a supply chain context. It separates measurable facts (like shipments and supply plans) from descriptive dimensions (like product, location, date, and organisations), which simplifies querying, improves performance, and aligns well with data warehousing best practices.
