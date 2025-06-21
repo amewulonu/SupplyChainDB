@@ -1,285 +1,3 @@
-CREATE DATABASE SupplyChainDB;
-
-GO
-USE SupplyChainDB;
-
-GO
-CREATE SCHEMA BRONZE;
-
-GO
-CREATE SCHEMA SILVER;
-
-GO
-CREATE SCHEMA GOLD;
-
-GO 
--- Create table  for product_v6
-CREATE TABLE BRONZE.product_v6 (
-partNumber VARCHAR(20),
-productType VARCHAR(20),
-categoryCode VARCHAR(50),
-brandCode VARCHAR(20),
-familyCode VARCHAR(50),
-lineCode VARCHAR(20),
-productSegmentCode VARCHAR(20),
-status VARCHAR(10),
-value DECIMAL (10,2),
-valueCurrency VARCHAR(10),
-defaultQuantityUnits VARCHAR(10),
-name VARCHAR(200),
-description TEXT,
-plannerCode VARCHAR(20),
-sourceLink VARCHAR(300)
-);
-GO
--- Load CSV file for product_v6 (Raw)
-BULK INSERT BRONZE.product_v6
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\product_v6.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-
-GO
--- Create table for organisation_v3 in Bronze schema to inject Raw data  
-CREATE TABLE BRONZE.organisation_v3 (
-organisationIdentifier VARCHAR(20),
-orgType VARCHAR(20),
-locationIdentifier VARCHAR(50),
-name VARCHAR(100),
-division VARCHAR(20),
-sourceLink VARCHAR(300)
-);
-GO
--- Load CSV file for organisation_v3 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.organisation_v3
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\organization_v3.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-
-GO
---Create table for location_v3 in Bronze schema to inject Raw data 
-CREATE TABLE BRONZE.location_v3 (
-locationIdentifier VARCHAR(50),
-locationType VARCHAR(20),
-locationName VARCHAR(100),
-address1 VARCHAR(50),
-address2 VARCHAR(50),
-city VARCHAR(50),
-postalCode VARCHAR(10),
-stateProvince VARCHAR(10),
-country VARCHAR(20),
-coordinates VARCHAR(50),
-includeInCorrelation VARCHAR(10), -- CAST will be used to case TRUE/FALSE, mapped to 1/0
-geo VARCHAR(50),
-sourceLink VARCHAR(300)
-);
-GO
-
--- Load CSV file for location_v3 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.location_v3
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\location_v3.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-GO
--- CAST, add a BIT column for clean data, update the bit column based on real column values
-GO
--- Add this BEFORE the UPDATE:
-ALTER TABLE BRONZE.location_v3
-ADD includeInCorrelation_bit BIT;
-
-GO
-UPDATE BRONZE.location_v3
-SET includeInCorrelation_bit = CASE 
-    WHEN LOWER(includeInCorrelation) = 'true' THEN 1
-    WHEN LOWER(includeInCorrelation) = 'false' THEN 0
-    ELSE NULL
-END;
-
-
-GO
--- Create table for inventory_v2 in Bronze schema to inject Raw data
-CREATE TABLE BRONZE.inventory_v2 (
-productPartNumber VARCHAR(20),
-locationIdentifier VARCHAR (10),
-inventoryType VARCHAR(20),
-quantity INT,
-quantityUnits VARCHAR(10),
-value DECIMAL(9,2),
-valueCurrency VARCHAR(10),
-researvationOrders INT,
-daysOfSupply INT,
-shelfLife INT,
-reorderLevel INT,
-expectedLeadTime INT,
-quantityUpperThreshold INT,
-quantityLowerThreshold INT,
-daysOfSupplyUpperThreshold INT,
-daysOfSupplyLowerThreshold INT,
-expiringThreshold INT,
-plannerCode VARCHAR(50),
-velocityCode VARCHAR(10),
-inventoryParentType VARCHAR(20),
-class VARCHAR(10),
-segment VARCHAR(20)
-);
-GO
--- Load CSV file for inventory_v2 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.inventory_v2
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\inventory_v2.csv'
-WITH (
-FORMAT = 'CSV',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-TABLOCK
-);
-
-GO
--- Create table for supplyPlan_v2 in Bronze schema to inject Raw data
-CREATE TABLE BRONZE.supplyPlan_v2 (
-productPartNumber VARCHAR(20),
-locationIdentifier VARCHAR(10),
-startDate DATE,
-duration INT,
-planParentType VARCHAR(20),
-planType VARCHAR(20),
-quantity INT,
-quantityUnits VARCHAR(10),
-planningCycle INT,
-source VARCHAR(10),
-sourceLink VARCHAR(300)
-);
-GO
--- Load CSV file for supplyPlan_v2 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.supplyPlan_v2 
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\supplyPlan_v2.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-
-GO
--- Create table for order_v3 in Bronze schema to inject Raw data
-CREATE TABLE BRONZE.order_v3 (
-orderIdentifier INT,
-orderType VARCHAR(20),
-vendorOrganisationIdentifier VARCHAR(50),
-buyerOrganisationIdentifier VARCHAR(50),
-shipFromInstructionLocationIdentifier VARCHAR(50),
-shipToLocationIdentifier VARCHAR(100),
-orderStatus VARCHAR(20),
-createdDate DATETIME,
-requestedShipDate DATETIME,
-requestedDeliveryDate DATETIME,
-plannedShipDate DATETIME,
-plannedDeliveryDate DATETIME,
-quantity INT,
-quantityUnits VARCHAR(10),
-totalValue DECIMAL(14,2),
-orderValueCurrency VARCHAR(10),
-lineCount INT,
-totalShippedQuantity INT,
-exclude BIT,
-sourceLink VARCHAR(300)
-);
-GO
--- Load CSV file for Order_v3 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.order_v3
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\order_v3.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-
-GO
--- Create table for shipment_v4 in Bronze schema to inject Raw data
-CREATE TABLE BRONZE.shipment_v4 (
-shipmentIdentifier VARCHAR(50),
-shipmentType VARCHAR(20),
-shipFromLocationIdentifier VARCHAR(50),
-shipToLocationIdentifier VARCHAR(50),
-vendorOrganizationIdentifier VARCHAR(20),
-buyerOrganizationIdentifier VARCHAR(20),
-carrierOrganizationIdentifier VARCHAR(20),
-status VARCHAR(10),
-dateCreated DATETIME,
-requestedTimeOfArrival DATETIME,
-committedTimeOfArrival DATETIME,
-actualShipDate DATETIME,
-estimatedTimeOfArrival DATETIME,
-revisedEstimatedTimeOfArrival DATETIME,
-predictedTimeOfArrival DATETIME,
-actualTimeOfArrival DATETIME,
-lineCount INT NULL,
-weight DECIMAL(8,2) NULL,
-weightUnits VARCHAR(20),
-currentLocationCoordinates VARCHAR(50),
-currentRegion VARCHAR(20),
-transportMode VARCHAR(50),
-houseAirwayBill VARCHAR(50),
-parcelTrackingNumber VARCHAR(50),
-airwayMasterNumber VARCHAR(50),
-billOfLadingNumber VARCHAR(50),
-proNumber VARCHAR(50),
-manifest	VARCHAR(20),
-exclude INT NULL,
-sourcelink VARCHAR(300)
-);
-GO
--- Load CSV file for Shipment_v4 (Raw) into the created table in bronze schema
-BULK INSERT BRONZE.shipment_v4
-FROM 'C:\Data_Tech\Portfolio projects\Mentor_proj_SSME_SQL\proj2\shipment_v4.csv'
-WITH (
-FORMAT = 'csv',
-FIRSTROW = 2,
-FIELDTERMINATOR = ',',
-ROWTERMINATOR = '\n',
-KEEPNULLS,
-TABLOCK
-);
-
-GO
--- viewed the tables to ensure the data was well loaded
-SELECT * FROM BRONZE.order_v3; -- did same for all tables imported
-
-GO
-
-SELECT 
-    s.name AS SchemaName,          -- Selects the schema name from sys.schemas, renaming it as SchemaName
-    t.name AS TableName            -- Selects the table name from sys.tables, renaming it as TableName
-FROM sys.tables t                 -- From the system view sys.tables (alias t), which contains all user tables
-JOIN sys.schemas s                -- Join with the system view sys.schemas (alias s), which contains all schemas
-    ON t.schema_id = s.schema_id  -- Join condition: match tables to their schemas by schema_id
-ORDER BY s.name, t.name;          -- Sort the results first by schema name, then by table name alphabetically
-
-
-
-GO
 -- Data Cleaning and Transformation for Product Data
 -- Create table SILVER.product_v6
 -- Created the SILVER.product_v6 table to store detailed product information with a surrogate primary key (productID).
@@ -335,9 +53,8 @@ SELECT
     ISNULL(NULLIF(LTRIM(RTRIM(CAST(sourceLink AS VARCHAR(MAX)))), ''), 'N/A')               -- Cleaned sourceLink or 'N/A'
 FROM BRONZE.product_v6;
 
-
-
 GO
+
 -- Created the SILVER.organisation_v3 table to store organisation details with a surrogate primary key (organisationID).
 -- Each organisation has a unique organisationIdentifier and includes attributes like type, location, name, and division.
 -- The table also tracks the source of the data (sourceLink) and records timestamps for row creation and last update.
@@ -352,6 +69,7 @@ CREATE TABLE SILVER.organisation_v3 (
     insertedAt DATETIME DEFAULT GETDATE(),
     lastUpdatedAt DATETIME DEFAULT GETDATE()
 );
+
 GO
 -- Insert organisation data into SILVER.organisation_v3 with specified columns.
 -- This populates the table with organisation identifiers, types, locations, names, divisions, and source links.
@@ -378,8 +96,8 @@ SELECT
 FROM BRONZE.organisation_v3
 WHERE organisationIdentifier IS NOT NULL;
 
-
 GO
+-- Task 2 
 -- Create table SILVER.location_v3
 CREATE TABLE SILVER.location_v3 (
 	locationID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
@@ -431,7 +149,6 @@ SELECT
     NULLIF(LTRIM(RTRIM(geo)), ''),                                   -- Trim, keep NULL if empty
     ISNULL(NULLIF(LTRIM(RTRIM(sourceLink)), ''), 'N/A')               -- Trim, replace empty with 'N/A'
 FROM BRONZE.location_v3;
-
 
 GO
 -- Create SILVER.inventory_v2
@@ -538,6 +255,7 @@ CREATE TABLE SILVER.supplyPlan_v2 (
     FOREIGN KEY (productID) REFERENCES SILVER.product_v6(productID),  -- Foreign key constraint to product table
     FOREIGN KEY (locationID) REFERENCES SILVER.location_v3(locationID) -- Foreign key constraint to location table
 );
+
 GO
 
 INSERT INTO SILVER.supplyplan_v2 (
@@ -570,7 +288,6 @@ INNER JOIN SILVER.product_v6 p
     ON LTRIM(RTRIM(sp.productPartNumber)) = p.partNumber  -- Join on trimmed product part number
 INNER JOIN SILVER.location_v3 l
     ON LTRIM(RTRIM(sp.locationIdentifier)) = l.locationIdentifier;  -- Join on trimmed location identifier
-
 
 GO
 -- Create a table SILVER.order_v3
@@ -664,10 +381,8 @@ INNER JOIN SILVER.location_v3 st
     ON LTRIM(RTRIM(o.shipToLocationIdentifier)) = st.locationIdentifier         -- Join ship-to location
 WHERE o.rn = 1;  -- Only keep the latest record per orderIdentifier based on createdDate
 
-
-
-
 GO
+
 -- Create a table SILVER.shipment_v4
 CREATE TABLE SILVER.shipment_v4 (
     shipmentID INT IDENTITY(1,1) PRIMARY KEY NOT NULL,   -- Surrogate key, unique shipment ID
@@ -799,12 +514,10 @@ WHERE
     AND o_buyer.organisationID IS NOT NULL            -- Only keep if buyer organisation found
     AND o_carrier.organisationID IS NOT NULL;         -- Only keep if carrier organisation found
 
-
-
 GO
 -- Create SILVER.DimDate table
 -- Create SILVER.DimDate table
-CREATE TABLE SILVER.DimDate (
+CREATE TABLE SILVER.dimDate (
     dateID INT IDENTITY(1,1) PRIMARY KEY,           -- Surrogate key for each date (auto-increment)
     date DATE NOT NULL UNIQUE,                       -- Actual calendar date (unique)
     year INT NOT NULL,                               -- Year part of the date
@@ -817,7 +530,3 @@ CREATE TABLE SILVER.DimDate (
     insertedAt DATETIME DEFAULT GETDATE(),          -- Timestamp when row inserted
     lastUpdatedAt DATETIME DEFAULT GETDATE()        -- Timestamp when row last updated
 );
-
-
-
-
