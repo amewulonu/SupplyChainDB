@@ -10,38 +10,49 @@ ________________________________________
 •	Task: Load raw CSVs into BRONZE schema staging tables.
 
 2. Data Cleaning & Transformation
+Task:
 •	Handle missing values (e.g., impute weight using average values).
 •	Standardise and enrich location data.
 •	Convert date/time formats.
 •	Resolve data inconsistencies.
 •	Create DimDate from relevant timestamps.
 3. Data Modelling (Star Schema)
+Tasks:
+•	Create an ER diagram for the schema. (Hint: Shipment can serve as a fact table, potentially with a SupplyPlan fact table as well.) Consider dimensions like:
+o	Location (from both files)
+o	Product (from SupplyPlan_v2.csv)
+o	Vendor/Buyer/Carrier (from Shipment_v4.csv)
+o	Date (for various date fields)
+•	Normalise the data into fact and dimension tables. Design the tables to minimise redundancy and ensure data integrity.
+•	Use SQL to transform and load data from the raw tables into the star schema.
+Example Star Schema Suggestion:
 •	Fact Tables:
-o	ShipmentFacts
-o	SupplyPlanFacts
+o	ShipmentFacts: shipmentIdentifier (PK), shipmentType, shipFromLocationKey (FK), shipToLocationKey (FK), vendorKey (FK), buyerKey (FK), carrierKey (FK), status, dateCreatedKey (FK),
+requestedTimeOfArrivalKey (FK), committedTimeOfArrivalKey (FK), actualShipDateKey (FK), estimatedTimeOfArrivalKey (FK), revisedEstimatedTimeOfArrivalKey (FK), predictedTimeOfArrivalKey (FK),
+ actualTimeOfArrivalKey (FK), lineCount, weight, weightUnits.
+o	SupplyPlanFacts: productKey (FK), locationKey (FK), startDateKey (FK), duration, planParentType, planType, quantity, quantityUnits, planningCycle, source, sourceLink
 •	Dimension Tables:
-o	DimProduct
-o	DimLocation
-o	DimOrganization
-o	DimDate
-•	Design Tasks:
-o	Create ER diagram
-o	Normalise data
-o	Build SILVER schema with surrogate keys
+o	DimLocation: locationKey (PK), locationIdentifier, region (from Shipment), other relevant location details.
+o	DimProduct: productKey (PK), partNumber.
+o	DimOrganization: organizationKey (PK), organizationIdentifier.
+o	DimDate: dateKey (PK), date, year, month, day, dayOfWeek.
 
 4. Load Data into Star Schema
-•	Populate GOLD tables from SILVER layer using SQL transformation scripts.
+Task:
+•	Load the transformed data into the tables of your star schema (Populate GOLD tables from SILVER layer using SQL transformation scripts).
 
 5. Advanced SQL Queries
-•	Stored Procedure: Total planned quantity per location over the date range.
-•	CTE: Top 5 vendors by shipment count in a region.
-•	Subquery: Shipments with above-average weight.
-•	Window Function: Rolling avg. shipment weight by carrier.
+Tasks:
+•	Using Stored Procedure: Calculate the total quantity of products planned per location for a given date range.
+•	Common Table Expression (CTE): Find the top 5 vendors with the most shipments in a specific region.
+•	Subquery: Identify shipments with weights above the average weight for their shipment type.
+•	Window Function: Calculate the rolling average of shipment weight over time for a specific carrier.
 
 6. MySQL Optimisation
-•	Add indexes on keys and frequently queried fields.
-•	Consider partitioning ShipmentFacts by date for large volumes.
-•	Use EXPLAIN to troubleshoot and optimise slow queries.
+ Tasks:
+•	Indexing: Add indexes to foreign key columns in fact tables and primary key columns in dimension tables. Index columns used in frequently executed queries.
+•	Partitioning: Consider partitioning the ShipmentFacts table by actualShipDateKey if you have a large volume of data and frequently query based on date ranges.
+•	Query Optimisation: Use EXPLAIN or Query Store to analyse and optimise slow queries.
 ________________________________________
 ##  Key Design Decisions
 🔸 Why This Schema?
@@ -56,7 +67,7 @@ Use Type 2 SCD for tracking historical changes (e.g., carrier renames), preservi
 •	Standardise identifiers and formats
 •	Deduplicate where necessary
 ________________________________________
-💡 Interview-Style Q&A
+💡Questions for the Capstone Project 
 Q: What's the difference between a CTE and a subquery?
 A: CTEs improve readability and reusability; subqueries are nested within a main query. Use CTEs when logic must be reused or layered.
 Q: How do window functions enhance performance?
@@ -69,19 +80,20 @@ ________________________________________
 To do… Repository Structure
 graphql
 CopyEdit
-📁 SupplyChain-Capstone
-├── 📂 data            # Raw CSVs
-├── 📂 sql_scripts     # All DDL/DML scripts
-├── 📂 diagrams        # ERD and schema visualisations
-├── 📂 reports         # Query results & insights
-└── 📄 README.md       # Project summary and key insights
-
+📁 SupplyChainDB
+├── 📂 BRONZE.sql   # All Raw Table CSVs
+├── 📂 GOLD.sql     # All DDL/DML scripts
+├── 📂 SILVER.sql   # All Transformed tables
+├── 📂 diagram      # Query results & insights
+└── 📄 README.md    # Project summary and key insights
 
 ## further questions:
 ## Questions for this Capstone Project
 
 ### Why did you choose a particular schema for this project? Explain your rationale for selecting the fact and dimension tables.
-The star schema was chosen for this project because it provides a clear and efficient structure for analytical queries in a supply chain context. It separates measurable facts (like shipments and supply plans) from descriptive dimensions (like product, location, date, and organisations), which simplifies querying, improves performance, and aligns well with data warehousing best practices.
+The star schema was chosen for this project because it provides a clear and efficient structure for analytical queries in a supply chain context. 
+It separates measurable facts (like shipments and supply plans) from descriptive dimensions (like product, location, date, and organisations), 
+which simplifies querying, improves performance, and aligns well with data warehousing best practices.
 
 This simplifies getting answers to complex business questions such as:
 Using this schema, we can answer strategic business questions such as:
