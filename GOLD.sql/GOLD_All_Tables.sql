@@ -1,5 +1,10 @@
 -- DIM_PRODUCT
-CREATE TABLE GOLD.dimProduct (
+USE SupplyChainDB;
+
+SELECT * FROM GOLD.dimDate;
+
+GO
+CREATE TABLE GOLD.dimProduct_v6 (
     productKey INT IDENTITY(1,1) PRIMARY KEY,
     partNumber VARCHAR(50) NOT NULL UNIQUE,
     productType VARCHAR(20) NOT NULL,
@@ -15,7 +20,7 @@ CREATE TABLE GOLD.dimProduct (
 
 GO
 -- DIM_ORGANIZATION
-CREATE TABLE GOLD.dimOrganization (
+CREATE TABLE GOLD.dimOrganisation_v3 (
     organizationKey INT IDENTITY(1,1) PRIMARY KEY,
     organizationIdentifier VARCHAR(50) NOT NULL UNIQUE,
     orgType VARCHAR(50) NOT NULL,
@@ -26,7 +31,7 @@ CREATE TABLE GOLD.dimOrganization (
 GO
 -- Task No3 Dimension Tables Creation (GOLD Layer)
 -- DIM_LOCATION
-CREATE TABLE GOLD.dimLocation (
+CREATE TABLE GOLD.dimLocation_v3 (
     locationKey INT IDENTITY(1,1) PRIMARY KEY,
     locationIdentifier VARCHAR(50) NOT NULL,
     locationType VARCHAR(20) NOT NULL,
@@ -43,8 +48,47 @@ CREATE TABLE GOLD.dimLocation (
 );
 
 GO
+CREATE TABLE GOLD.factOrder_v3 (
+    orderKey INT IDENTITY(1,1) PRIMARY KEY,                       -- Surrogate fact key
+
+    -- Reference keys (FKs to be added later)
+    vendorKey INT NOT NULL,                                       -- Reference to GOLD.DimOrganization (Vendor)
+    buyerKey INT NOT NULL,                                        -- Reference to GOLD.DimOrganization (Buyer)
+    shipFromLocationKey INT NOT NULL,                             -- Reference to GOLD.DimLocation (origin)
+    shipToLocationKey INT NOT NULL,                               -- Reference to GOLD.DimLocation (destination)
+
+    -- Business key and metadata
+    orderIdentifier VARCHAR(50) NOT NULL UNIQUE,                  -- Business key (external system)
+    orderType VARCHAR(50),                                        -- Order category/type
+    orderStatus VARCHAR(50),                                      -- Status (e.g., Planned, Completed)
+
+    -- Date keys (consider linking to GOLD.DimDate later)
+    createdDate DATETIME,
+    requestedShipDate DATETIME,
+    requestedDeliveryDate DATETIME,
+    plannedShipDate DATETIME,
+    plannedDeliveryDate DATETIME,
+
+    -- Measurable facts
+    quantity INT,
+    quantityUnits VARCHAR(10),
+    totalValue DECIMAL(14,2),
+    orderValueCurrency VARCHAR(10),
+    lineCount INT,
+    totalShippedQuantity INT,
+
+    -- Metadata
+    exclude BIT,                                                  -- Flag to filter records (1 = exclude)
+    sourceLink VARCHAR(255) DEFAULT 'N/A',                        -- Data source reference
+
+    -- Audit columns
+    insertedAt DATETIME DEFAULT GETDATE(),
+    lastUpdatedAt DATETIME DEFAULT GETDATE()
+);
+
+GO
 -- FACT_SUPPLY_PLAN
-CREATE TABLE GOLD.factSupplyPlan (
+CREATE TABLE GOLD.factSupplyPlan_v2 (
     supplyPlanKey INT IDENTITY(1,1) PRIMARY KEY,
     productKey INT NOT NULL,
     locationKey INT NOT NULL,
@@ -65,7 +109,7 @@ CREATE TABLE GOLD.factSupplyPlan (
 GO
  -- Fact Tables Creation (GOLD Layer)
  -- FACT_SHIPMENT
-CREATE TABLE GOLD.factShipment (
+CREATE TABLE GOLD.factShipment_v4 (
     shipmentIdentifier VARCHAR(50) PRIMARY KEY,
     shipmentType VARCHAR(50),
     shipFromLocationKey INT NOT NULL,
@@ -101,6 +145,45 @@ CREATE TABLE GOLD.factShipment (
     CONSTRAINT FK_RequestedArrival 
         FOREIGN KEY (requestedArrivalKey) REFERENCES GOLD.DimDate(dateKey),
     -- Repeat similar FKs for other date fields
+);
+
+GO
+CREATE TABLE GOLD.factInventory_v2 (
+    inventoryKey INT IDENTITY(1,1) PRIMARY KEY,                    -- Surrogate fact key
+
+    -- Reference columns (FKs to be added later)
+    productKey INT NOT NULL,                                      -- Reference to DimProduct
+    locationKey INT NOT NULL,                                     -- Reference to DimLocation
+    inventoryType VARCHAR(50),                                    -- Inventory category/type
+
+    -- Measurable facts
+    quantity INT,
+    quantityUnits VARCHAR(10),
+    value DECIMAL(12,2),
+    valueCurrency VARCHAR(10),
+    reservationOrders INT,
+    daysOfSupply INT,
+    shelfLife INT,
+    reorderLevel INT,
+    expectedLeadTime INT,
+
+    -- Thresholds
+    quantityUpperThreshold INT,
+    quantityLowerThreshold INT,
+    daysOfSupplyUpperThreshold INT,
+    daysOfSupplyLowerThreshold INT,
+    expiringThreshold INT,
+
+    -- Classification details
+    plannerCode VARCHAR(50),
+    velocityCode VARCHAR(20),
+    inventoryParentType VARCHAR(50),
+    class VARCHAR(50),
+    segment VARCHAR(50),
+
+    -- Audit columns
+    insertedAt DATETIME DEFAULT GETDATE(),
+    lastUpdatedAt DATETIME DEFAULT GETDATE()
 );
 
 GO
@@ -119,67 +202,6 @@ CREATE TABLE GOLD.dimDate (
     isHoliday BIT DEFAULT 0,
     fiscalYear INT NULL,
     fiscalQuarter INT NULL
-);
-
-GO
- -- Fact Tables Creation (GOLD Layer)
- -- FACT_SHIPMENT
-CREATE TABLE GOLD.factShipment (
-    shipmentIdentifier VARCHAR(50) PRIMARY KEY,
-    shipmentType VARCHAR(50),
-    shipFromLocationKey INT NOT NULL,
-    shipToLocationKey INT NOT NULL,
-    vendorKey INT NOT NULL,
-    buyerKey INT NOT NULL,
-    carrierKey INT NOT NULL,
-    status VARCHAR(50),
-    dateCreatedKey INT NOT NULL,
-    requestedArrivalKey INT NULL,
-    committedArrivalKey INT NULL,
-    actualShipDateKey INT NULL,
-    estimatedArrivalKey INT NULL,
-    revisedArrivalKey INT NULL,
-    predictedArrivalKey INT NULL,
-    actualArrivalKey INT NULL,
-    lineCount INT,
-    weight DECIMAL(10,2),
-    weightUnits VARCHAR(20),
-    
-    CONSTRAINT FK_ShipFromLoc 
-        FOREIGN KEY (shipFromLocationKey) REFERENCES GOLD.DimLocation(locationKey),
-    CONSTRAINT FK_ShipToLoc 
-        FOREIGN KEY (shipToLocationKey) REFERENCES GOLD.DimLocation(locationKey),
-    CONSTRAINT FK_VendorOrg 
-        FOREIGN KEY (vendorKey) REFERENCES GOLD.DimOrganization(organizationKey),
-    CONSTRAINT FK_BuyerOrg 
-        FOREIGN KEY (buyerKey) REFERENCES GOLD.DimOrganization(organizationKey),
-    CONSTRAINT FK_CarrierOrg 
-        FOREIGN KEY (carrierKey) REFERENCES GOLD.DimOrganization(organizationKey),
-    CONSTRAINT FK_DateCreated 
-        FOREIGN KEY (dateCreatedKey) REFERENCES GOLD.DimDate(dateKey),
-    CONSTRAINT FK_RequestedArrival 
-        FOREIGN KEY (requestedArrivalKey) REFERENCES GOLD.DimDate(dateKey),
-    -- Repeat similar FKs for other date fields
-);
-
-GO
--- FACT_SUPPLY_PLAN
-CREATE TABLE GOLD.factSupplyPlan (
-    supplyPlanKey INT IDENTITY(1,1) PRIMARY KEY,
-    productKey INT NOT NULL,
-    locationKey INT NOT NULL,
-    startDateKey INT NOT NULL,
-    duration INT,
-    planParentType VARCHAR(50),
-    planType VARCHAR(50),
-    quantity INT,
-    quantityUnits VARCHAR(10),
-    planningCycle INT,
-    source VARCHAR(50),
-    
-    FOREIGN KEY (productKey) REFERENCES GOLD.DimProduct(productKey),
-    FOREIGN KEY (locationKey) REFERENCES GOLD.DimLocation(locationKey),
-    FOREIGN KEY (startDateKey) REFERENCES GOLD.DimDate(dateKey)
 );
 
 GO
