@@ -1,14 +1,16 @@
 # Capstone Project: Supply Chain Data Analysis
 
 🔍 Overview
-The SupplyChain project  analyses supply chain data to uncover insights into supply planning, shipment trends, and logistical performance. It encompasses full-cycle data engineering steps, from ingestion to optimisation, utilising MySQL. 
+The SupplyChain project  analyses supply chain data to uncover insights into supply planning, shipment trends, and logistical performance. 
+It encompasses full-cycle data engineering steps, from ingestion to optimisation, utilising MySQL. 
 ________________________________________
 ## Project Workflow
 1. Data Ingestion
+Tasks:
 •	Source: Provided CSV files
 •	Tools: MySQL Workbench, Medallion Architecture (Bronze → Silver → Gold)
 •	Task: Load raw CSVs into BRONZE schema staging tables.
-
+ 
 2. Data Cleaning & Transformation
 Task:
 •	Handle missing values (e.g., impute weight using average values).

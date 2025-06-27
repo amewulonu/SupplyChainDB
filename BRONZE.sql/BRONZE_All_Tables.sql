@@ -269,17 +269,9 @@ SELECT * FROM BRONZE.order_v3; -- did same for all tables imported
 
 GO
 
-SELECT 
-    s.name AS SchemaName,          -- Selects the schema name from sys.schemas, renaming it as SchemaName
-    t.name AS TableName            -- Selects the table name from sys.tables, renaming it as TableName
-FROM sys.tables t                 -- From the system view sys.tables (alias t), which contains all user tables
-JOIN sys.schemas s                -- Join with the system view sys.schemas (alias s), which contains all schemas
-    ON t.schema_id = s.schema_id  -- Join condition: match tables to their schemas by schema_id
-ORDER BY s.name, t.name;          -- Sort the results first by schema name, then by table name alphabetically
 
 
+USE SupplyChainDB
 GO
-
-
-
-
+SELECT * FROM BRONZE.supplyPlan_v2 
+GO
